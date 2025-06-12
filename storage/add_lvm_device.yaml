@@ -1,0 +1,30 @@
+---
+#
+#
+#   Configures block device at `/dev/sdb`
+#
+#     - Requires role: `ansible-galaxy install mrlesmithjr.manage-lvm`
+#
+
+- hosts: all
+
+  vars:
+    lvm_groups:
+      - vgname: 'longhorn-vg'
+        disks:
+          - /dev/sdb
+        create: true  # false to remove vg
+        lvnames:
+          - lvname: 'longhorn-lv'
+            size: '100%FREE'
+            create: true    # false to remove lv
+            filesystem: ext4
+            mount: true
+            mntp: '/var/lib/longhorn'
+            mopts: 'defaults,noatime,nobarrier'
+    manage_lvm: true
+    
+  tasks:
+    - name: Include lvm
+      ansible.builtin.include_role:
+        name: ../ansible-manage-lvm

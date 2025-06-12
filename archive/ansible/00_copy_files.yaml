@@ -1,0 +1,20 @@
+---
+#
+#
+#   updates /etc/postfix/main.cf to only use `inet_protocol` ipv4 (otherwise postfix degrades)
+#
+#
+
+- hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
+  
+    - name: Copy files
+      copy:
+        src: pki-ltc_CA.crt
+        dest: /etc/pki/tls/certs/pki-ltc_CA.crt
+        owner: root
+        group: root
+        mode: '0644'

@@ -1,0 +1,41 @@
+---
+#
+#
+#   Appends 'bcit.ca' to search domain for /etc/resolv.conf ('ltc.bcit.ca' does not maintain a DNS server).
+#
+#   Requires role: install with `ansible-galaxy install kwoodson.yedit`
+
+- hosts: all
+  become: yes
+  become_user: root
+  serial: 1
+
+  any_errors_fatal: true
+
+  roles:
+    - kwoodson.yedit
+
+  tasks:
+
+  - name: Adjust installer config file permissions
+    ansible.builtin.file:
+      path: /etc/netplan/00-installer-config.yaml
+      owner: root
+      group: root
+      mode: '0600'
+
+  - name: Remove unused admin-zone file (delete file)
+    ansible.builtin.file:
+      path: /etc/netplan/00-nwadapter-netcfg.yaml.manual
+      state: absent
+
+  - name: update domain search in netplan config
+    yedit:
+      src: /etc/netplan/00-installer-config.yaml
+      key: network.ethernets.ens160.nameservers.search
+      value: [ bcit.ca ]
+
+  - name: Apply netplan changes
+    command: netplan apply
+    register: netplan_apply
+    changed_when: netplan_apply.stdout != ''

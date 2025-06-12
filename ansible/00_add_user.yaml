@@ -1,0 +1,70 @@
+---
+#
+#
+#   Adds `ansible` user to systems with ssh keys
+#
+#     - Requires role: `ansible-galaxy install weareinteractive.users`
+#
+
+- hosts: all
+  become: yes
+  become_user: root
+
+  roles:
+    - weareinteractive.users
+
+  vars_prompt:
+
+    - name: username
+      prompt: Username?
+      private: no
+      default: ansible
+
+    - name: user_groups
+      prompt: Append groups?
+      private: no
+      default: wheel
+
+    - name: ssh_keyfile_name
+      prompt: SSH key name?
+      private: no
+      default: id_ed25519_ansible
+
+    - name: authorized_keyfile_name
+      prompt: Authorized key name?
+      private: no
+      default: id_ed25519_ansible.pub
+
+    - name: new_password
+      prompt: New user password? (copy from VAULT... ltc-inventory/ansible/ansible_become.password)
+      private: yes
+
+  vars:
+    users:
+      - username: "{{ username }}"
+        home_create: yes
+        append: yes
+        ssh_key: "{{ lookup('file', '~/.{{ username }}/{{ ssh_keyfile_name }}') }}"
+        authorized_keys:
+          - "{{ lookup('file', '~/.{{ username }}/{{ authorized_keyfile_name }}') }}"
+    users_groups:
+      - "{{ user_groups }}"
+
+  tasks:
+    - name: Change user password
+      user:
+        name: "{{ username }}"
+        update_password: always
+        password: "{{ new_password | password_hash('sha512') }}"
+
+    - name: Install the latest version of nano
+      apt:
+        name: nano
+        state: latest
+
+    - name: add "pico" alias
+      lineinfile:
+        dest: "~/.bashrc"
+        create: yes
+        mode: 0644
+        line: 'alias pico="nano"'

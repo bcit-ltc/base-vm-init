@@ -1,0 +1,145 @@
+# Ansible playbook to install Vault Agent
+#
+# **Ansible playbooks require the following**
+# - the ansible user credentials stored in Vault at `ltc-infrastructure/ansible`
+# - a copy of the LTC inventory file, stored locally in `~/.ansible/hosts.json` (see https://issues.ltc.bcit.ca/-/snippets/62)
+#
+# 1. Create a token for the ansible run
+#
+#     vault token create -role=ansible-token-create
+#
+# 2. Copy the token value
+# 3. Run the playbook
+#
+#     ansible-playbook -l utility-01.ltc.bcit.ca run-agent.yaml
+#
+# The playbook uses the token to generate a "secret-id" for a role called `cert-issuer`. It then
+#   configures a Vault Agent to use the "secret-id" and the "role-id" in `/etc/vault.d/` to
+#   retrieve a vault token. The token is then used to request pki certificates.
+
+- name: Secure the Docker daemon
+  hosts: all
+  become: true
+
+  vars_prompt:
+    - name: VAULT_TOKEN
+      prompt: VAULT_TOKEN?
+      private: no
+
+  vars:
+    update_docker: false
+    overwrite_docker_config: false
+    docker_install_compose: false
+    update_vault: false
+    overwrite_vault_config: false
+    VAULT_VERSION: 1.12.3
+    vault_environment:
+      VAULT_ADDR: https://vault.ltc.bcit.ca
+      VAULT_TOKEN: "{{ VAULT_TOKEN }}"
+
+  handlers:
+    - name: restart docker
+      systemd:
+        name: docker
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+
+    - name: restart vault
+      service:
+        name: vault
+        state: restarted
+        enabled: yes
+
+  tasks:
+
+    - name: Does Docker exist?
+      stat:
+        path: /bin/docker
+      register: docker_exec
+
+    - name: Does the Docker override exist?
+      stat:
+        path: /etc/systemd/system/docker.service.d/override.conf
+      register: docker_override
+
+    - name: Does vault executable exist?
+      stat:
+        path: /usr/local/sbin/vault
+      register: vault_exec
+
+    - name: Do vault config files exist?
+      stat:
+        path: /etc/vault.d/config.hcl
+      register: vault_config
+
+    - import_role:
+        name: geerlingguy.docker
+      when: not docker_exec.stat.exists or update_docker == true
+
+    - name: Install/configure Docker override
+      block:
+        - name: create docker override directory
+          file:
+            path: /etc/systemd/system/docker.service.d/
+            state: directory
+            owner: root
+            group: root
+            mode: 0755
+        - name: copy docker override file
+          copy:
+            src: docker/docker.service.d/override.conf
+            dest: /etc/systemd/system/docker.service.d/override.conf
+            owner: root
+            group: root
+            mode: 0644
+
+      when: not docker_override.stat.exists or overwrite_docker_config == true
+
+    - name: Install/configure Vault
+      block:
+        - name: print vault environment
+          debug:
+            msg:
+              - "VAULT_VERSION: {{ VAULT_VERSION }}"
+              - "VAULT_TOKEN: {{ VAULT_TOKEN }}"
+        - name: Retrieve and unzip binary
+          unarchive:
+            src: "https://releases.hashicorp.com/vault/{{ VAULT_VERSION }}/vault_{{ VAULT_VERSION }}_linux_amd64.zip"
+            dest: /usr/local/sbin
+            remote_src: yes
+        - name: Change file ownership, group and permissions
+          file:
+            path: /usr/local/sbin/vault
+            mode: '0750'
+        - name: copy service file to remote
+          copy:
+            src: vault/vault.service
+            dest: /usr/local/lib/systemd/system/
+            force: yes
+
+      when: not vault_exec.stat.exists or update_vault == true
+
+      rescue:
+        - name: exec missing error message
+          ansible.builtin.debug:
+            msg: 'unzip or wget not installed?'
+
+    - name: copy config files to remote
+      copy:
+        src: vault/vault.d
+        dest: /etc
+        force: yes
+      when: not vault_config.stat.exists or overwrite_vault_config == true
+
+    - name: authenticate and retrieve secretID
+      shell: |
+        /usr/local/sbin/vault \
+        write -format=json -force auth/approle/role/cert-issuer/secret-id \
+        | jq -r '.data.secret_id' > secret-id
+      args:
+        chdir: /etc/vault.d/
+      environment:
+        "{{ vault_environment }}"
+      when: vault_exec.stat.exists
+      notify: restart vault

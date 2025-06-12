@@ -1,0 +1,23 @@
+---
+#
+#
+#   updates /etc/postfix/main.cf to only use `inet_protocol` ipv4 (otherwise postfix degrades)
+#
+#
+
+- hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
+  
+    - name: Update inet_protocol in /etc/postfix/main.cf
+      lineinfile:
+        path: /etc/postfix/main.cf
+        regexp: '^inet_protocols ='
+        line: 'inet_protocols = ipv4'
+
+    - name: restart postfix service
+      systemd:
+        state: restarted
+        name: postfix

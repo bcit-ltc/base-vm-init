@@ -1,0 +1,49 @@
+---
+
+- hosts: localhost
+  gather_facts: false
+
+  vars:
+    INVENTORY_PATH: ltc-infrastructure/data/inventory
+
+  vars_prompt:
+
+    - name: VAULT_TOKEN
+      prompt: VAULT_TOKEN?
+      private: no
+
+  tasks:
+
+    - name: Create temporary file
+      tempfile:
+        state: file
+      register: temp_hosts
+
+    - name: Print a message
+      debug:
+        msg: 'Retrieving latest hosts.json file from Vault'
+
+    - name: Update hosts.json
+      shell: "curl --header \"X-Vault-Token: {{ VAULT_TOKEN }}\" 
+        {{ VAULT_ADDR }}/v1/{{ INVENTORY_PATH }} 
+        | jq '.data.data' > {{ temp_hosts.path }}"
+
+    - name: overwrite contents of hosts.json
+      copy:
+        src: "{{ temp_hosts.path }}"
+        dest: ~/.ansible/hosts.json
+        follow: yes
+
+    - name: Use the registered var and the file module to remove the temporary file
+      file:
+        path: "{{ temp_hosts.path }}"
+        state: absent
+      when: temp_hosts.path is defined
+
+    - name: Confirm nodes
+      shell: "jq '[.all.hosts[]] | length' ~/.ansible/hosts.json"
+      register: node_count
+
+    - name: Print a message
+      debug:
+        msg: "Nodes registered: {{ node_count.stdout }}"

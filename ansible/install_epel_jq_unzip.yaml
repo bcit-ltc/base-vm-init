@@ -1,0 +1,18 @@
+---
+
+- hosts: all
+  become: yes
+
+  tasks:
+    - name: Install epel-release
+      package:
+        name: 
+          - epel-release
+        state: present    # absent to remove
+
+    - name: Install jq, unzip
+      package:
+        name: 
+          - jq
+          - unzip
+        state: present
