@@ -11,14 +11,10 @@ Follow these initial steps to prepare base image (brand new image provisioned by
 
 ## Initial Steps
 
-1. Install and setup Ansible
+1. Install Ansible
 
     ```bash
     brew install ansible
-
-    ansible-galaxy install weareinteractive.users
-    ...
-    + (other modules/roles as necessary)
     ```
 
 1. [Download and install Vault](https://www.vaultproject.io/downloads) and set a VAULT_TOKEN
@@ -26,7 +22,7 @@ Follow these initial steps to prepare base image (brand new image provisioned by
     ```bash
     vault login -method=ldap username={yourBcitEmail}
 
-    export VAULT_TOKEN={pasteYourTokenHere}
+    export VAULT_TOKEN={YourToken}
     ```
 
 1. Retrieve and store a local copy of the current inventory
@@ -57,24 +53,27 @@ Follow these initial steps to prepare base image (brand new image provisioned by
     ansible-inventory -i ~/.ansible/hosts.json --graph production
     ```
 
+1. Confirm you can ping the inventory
+
+    ```bash
+    ansible-playbook -i ~/.ansible/hosts.json -l prod_01 00_ping.yaml
+    ```
+
 ### Add Ansible User
 
-**These instructions assume you have an account on the newly-provisioned VM.** Images newly provisioned by ITS do not have the `ansible` user to run scripts. The first step is to create this user so that the rest of the scripts in this repo will run!
-
-1. Add ansible user with your own credentials. Run something like:
-
-    `ansible-playbook 00_add_user.yaml -u {yourUsername} -l {someInventoryGroup} --private-key ~/.ssh/id_ed25519`
-
-When the `ansible` user has been added the infrastructure is ready to be created.
+**These instructions assume you have an account on the newly-provisioned VM.** See ansible-1st.md for info.
 
 ## All Nodes: Add packages
 
 **Limit the hosts you are modifying:** Specify a group limit in your commands with `... -l {groupName}`.
 
-1. Update VM's (includes a reboot)
+1. Add packages, fix domain issue, and update (includes a reboot)
 
     ```bash
-    ansible-playbook 00_update.yaml -l prod_01
+    ansible-playbook 02_add_packages.yaml -l prod_01
+    ansible-playbook 03_update_domain.yaml -l prod_01
+    ansible-playbook 04_add_lvm_device.yaml -l prod_01
+    ansible-playbook 05_update.yaml -l prod_01
     ```
 
 1. Add epel and jq
