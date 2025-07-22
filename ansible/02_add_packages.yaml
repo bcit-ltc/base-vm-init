@@ -1,0 +1,40 @@
+---
+#
+#
+#   Adds `ansible` user to systems with ssh keys
+#
+#     - Requires role: `ansible-galaxy install weareinteractive.users`
+#
+
+- hosts: all
+  become: yes
+  become_user: root
+
+  vars:
+    systemd_package: iscsid
+
+  tasks:
+
+    - name: add "pico" alias
+      lineinfile:
+        dest: "~/.bashrc"
+        create: yes
+        mode: 0644
+        line: 'alias pico="nano"'
+
+    - name: Install packages nano, nfs-common, open-iscsi, jq, unzip
+      package:
+        name:
+          - nano
+          - nfs-common
+          - open-iscsi
+          - jq
+          - unzip
+        state: present    # absent to remove
+
+    - name: Restart service; also issue daemon-reload to pick up config changes
+      systemd:
+        enabled: yes
+        state: restarted
+        daemon_reload: yes
+        name: "{{ systemd_package }}"
