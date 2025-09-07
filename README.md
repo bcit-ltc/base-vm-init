@@ -1,4 +1,6 @@
-# base-vm-init
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+# Base VM Initialization
 
 > Scripts, configs, and Ansible modules for brand-new VM's
 
@@ -114,3 +116,11 @@ Follow these initial steps to prepare base image (brand new image provisioned by
         ```bash
         cp ~/.kube/config ~/.kube/config.bak && KUBECONFIG=~/.kube/config:/path/to/new/config kubectl config view --flatten > /tmp/config && mv /tmp/config ~/.kube/config
         ```
+
+## License
+
+This Source Code Form is subject to the terms of the Mozilla Public License, v2.0. If a copy of the MPL was not distributed with this file, You can obtain one at <https://mozilla.org/MPL/2.0/>.
+
+## About
+
+Developed in 🇨🇦 Canada by [BCIT's](https://www.bcit.ca/) [Learning and Teaching Centre](https://www.bcit.ca/learning-teaching-centre/). [Contact Us](mailto:ltc_techops@bcit.ca).
