@@ -16,14 +16,14 @@
   vars_prompt:
 
     - name: username
-      prompt: Username?
+      prompt: New user's username?
       private: no
       default: ansible
 
     - name: user_groups
       prompt: Append groups?
       private: no
-      default: wheel
+      default: sudo
 
     - name: ssh_keyfile_name
       prompt: SSH key name?
@@ -36,7 +36,7 @@
       default: id_ed25519_ansible.pub
 
     - name: new_password
-      prompt: New user password? (copy from VAULT... ltc-inventory/ansible/ansible_become.password)
+      prompt: New user's password? (copy from VAULT... ltc-inventory/ansible/ansible_become.password)
       private: yes
 
   vars:

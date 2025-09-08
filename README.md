@@ -2,27 +2,33 @@
 
 # Base VM Initialization
 
-> Scripts, configs, and Ansible modules for brand-new VM's
+Scripts, configs, and Ansible modules for newly-provisioned virtual machines.
 
-Follow these initial steps to prepare base image (brand new image provisioned by ITS) to be added to a cluster.
+Follow these steps to prepare virtual machines to be Kubernetes cluster nodes.
 
-## Tool Requirements
+## Requirements
 
 * Ansible
 * Vault
 
-## Initial Steps
+## Getting Started
 
-1. Install Ansible
+1. Install Ansible and [Vault](https://www.vaultproject.io/downloads).
 
     ```bash
-    brew install ansible
+    brew install ansible vault
     ```
 
-1. [Download and install Vault](https://www.vaultproject.io/downloads) and set a VAULT_TOKEN
+1. Install required Ansible Galaxy modules
 
     ```bash
-    vault login -method=ldap username={yourBcitEmail}
+    ansible-galaxy install weareinteractive.users kwoodson.yedit mrlesmithjr.manage-lvm
+    ```
+
+1. Login to Vault and set the VAULT_TOKEN environment variable
+
+    ```bash
+    vault login -method=oidc username={yourBcitEmail}
 
     export VAULT_TOKEN={YourToken}
     ```
@@ -61,61 +67,7 @@ Follow these initial steps to prepare base image (brand new image provisioned by
     ansible-playbook -i ~/.ansible/hosts.json -l prod_01 00_ping.yaml
     ```
 
-### Add Ansible User
-
-**These instructions assume you have an account on the newly-provisioned VM.** See ansible-1st.md for info.
-
-## All Nodes: Add packages
-
-**Limit the hosts you are modifying:** Specify a group limit in your commands with `... -l {groupName}`.
-
-1. Add packages, fix domain issue, and update (includes a reboot)
-
-    ```bash
-    ansible-playbook 02_add_packages.yaml -l prod_01
-    ansible-playbook 03_update_domain.yaml -l prod_01
-    ansible-playbook 04_add_lvm_device.yaml -l prod_01
-    ansible-playbook 05_update.yaml -l prod_01
-    ```
-
-1. Add epel and jq
-
-    ```bash
-    ansible-playbook install_epel_jq_unzip.yaml
-    ```
-
-## Kubernetes Nodes: configure storage and RKE2
-
-1. Add iscsi, nfs-utils
-
-    ```bash
-    ansible-playbook storage/install_storage_packages.yaml -l phase5\:\&staging
-    ```
-
-1. Configure LVM device
-
-    ```bash
-    ansible-playbook storage/install_storage_packages.yaml -l phase5\:\&staging
-
-    ansible-playbook storage/add_lvm_device.yaml -l phase5\:\&staging
-    ```
-
-1. Install RKE2 using "ansible-rke2" module
-
-    > See `rke2-ansible/README.md` for instructions
-
-1. Retrieve KUBECONFIG file and merge it with your existing `~/.kube/config` to be able to run `kubectl` commands
-
-    1. Login to [Rancher](https://rancher2.ltc.bcit.ca).
-    1. Retrieve KUBECONFIG
-
-        ![copy kubeconfig](./kubeconfig.png)
-
-    1. Merge into your existing `~/.kube/config` file
-
-        ```bash
-        cp ~/.kube/config ~/.kube/config.bak && KUBECONFIG=~/.kube/config:/path/to/new/config kubectl config view --flatten > /tmp/config && mv /tmp/config ~/.kube/config
-        ```
+See the `ansible` and `kubernetes` folders for additional procedures.
 
 ## License
 
@@ -123,4 +75,4 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v2.
 
 ## About
 
-Developed in 🇨🇦 Canada by [BCIT's](https://www.bcit.ca/) [Learning and Teaching Centre](https://www.bcit.ca/learning-teaching-centre/). [Contact Us](mailto:ltc_techops@bcit.ca).
+Developed in 🇨🇦 Canada by the [Learning and Teaching Centre](https://www.bcit.ca/learning-teaching-centre/) at [BCIT](https://www.bcit.ca/).

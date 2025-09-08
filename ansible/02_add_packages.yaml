@@ -1,9 +1,7 @@
 ---
 #
 #
-#   Adds `ansible` user to systems with ssh keys
-#
-#     - Requires role: `ansible-galaxy install weareinteractive.users`
+#   Adds packages for Longhorn storage provisioner
 #
 
 - hosts: all

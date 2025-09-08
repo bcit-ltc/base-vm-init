@@ -1,6 +1,10 @@
 ---
-
-# Use cautiously!
+#
+#
+#   Destroys RKE2 installation
+#
+#   Use cautiously!
+#
 
 - hosts: all
   gather_facts: true

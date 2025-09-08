@@ -1,7 +1,7 @@
 ---
 #
 #
-#   Configures block device at `/dev/sdb`
+#   Configures block device at `/dev/sdb` for Longhorn (https://longhorn.io)
 #
 #     - Requires role: `ansible-galaxy install mrlesmithjr.manage-lvm`
 #

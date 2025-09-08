@@ -1,6 +1,10 @@
 ---
-
-# Use cautiously!
+#
+#
+#   Updates all OS packages
+#
+#   Use cautiously!
+#
 
 - hosts: all
   gather_facts: true

@@ -1,6 +1,8 @@
 ---
-
-# This updates the local Ansible inventory from Vault.
+#
+#
+#   Updates the local Ansible inventory from Vault.
+# 
 
 - hosts: localhost
   gather_facts: false

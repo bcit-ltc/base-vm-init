@@ -4,6 +4,7 @@
 #   Appends 'bcit.ca' to search domain for /etc/resolv.conf ('ltc.bcit.ca' does not maintain a DNS server).
 #
 #   Requires role: install with `ansible-galaxy install kwoodson.yedit`
+#
 
 - hosts: all
   become: yes
