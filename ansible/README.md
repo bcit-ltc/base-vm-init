@@ -49,6 +49,14 @@ New VM's do not have the `ansible` user to run scripts. The first step is to cre
 
     `unset ANSIBLE_CONFIG`
 
+1. List the current inventory and make note of the machines you want to configure
+
+    `ansible-inventory --graph`
+
+1. Set Vault's endpoint
+
+    `export VAULT_ADDR=https://vault.ltc.bcit.ca:8200`
+
 1. Retrieve the ansible user's `become` password from Vault
 
     `vault kv get -mount="ltc-infrastructure" "ansible/become-password"`
@@ -57,6 +65,6 @@ New VM's do not have the `ansible` user to run scripts. The first step is to cre
 
     - Be sure the ssh-agent is running for passwordless login. See [GitHub SSH Agent docs](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#adding-your-ssh-key-to-the-ssh-agent).
 
-    `ansible-playbook 00_add_ansible_user.yaml -u $USERNAME --private-key ~/.ssh/id_ed25519`
+    `ansible-playbook 01_add_ansible_user.yaml -u $USERNAME --private-key ~/.ssh/id_ed25519 -l {clusterGroup}`
 
 When the `ansible` user has been added the infrastructure is ready to be created.

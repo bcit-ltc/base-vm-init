@@ -24,7 +24,22 @@
             mopts: 'defaults,noatime,nobarrier'
     manage_lvm: true
     
+
+
+  pre_tasks:
+    - name: Check if manage-lvm role is present
+      ansible.builtin.stat:
+        path: "{{ playbook_dir }}/roles/mrlesmithjr.manage-lvm"
+      register: lvm_role
+
+    - name: Install manage-lvm role if not present
+      ansible.builtin.command:
+        cmd: "ansible-galaxy install mrlesmithjr.manage-lvm"
+      when: not lvm_role.stat.exists
+      changed_when: true
+      delegate_to: localhost
+
   tasks:
     - name: Include lvm
       ansible.builtin.include_role:
-        name: ../ansible-manage-lvm
+        name: mrlesmithjr.manage-lvm
