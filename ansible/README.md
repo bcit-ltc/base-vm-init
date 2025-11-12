@@ -31,7 +31,7 @@ New VM's do not have the `ansible` user to run scripts. The first step is to cre
 
 1. Create a new Ansible inventory file with the list of VMs (or retrieve the inventory file from Vault)
 
-    `echo -e "prod-manager-01.ltc.bcit.ca\nprod-manager-02.ltc.bcit.ca" > ~/.ansible/hosts-1st.json`
+    `echo -e "vm1.domain.com\nvm2.domain.com" > ~/.ansible/hosts-1st.json`
 
 1. Retrieve the SSH keys from the list of VMs
 
@@ -55,7 +55,7 @@ New VM's do not have the `ansible` user to run scripts. The first step is to cre
 
 1. Set Vault's endpoint
 
-    `export VAULT_ADDR=https://vault.ltc.bcit.ca:8200`
+    `export VAULT_ADDR={vaultAddress}`
 
 1. Retrieve the ansible user's `become` password from Vault
 
